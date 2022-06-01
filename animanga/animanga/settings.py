@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-85&8p)7ky0yr@wt=tnxbj7_(acgc@(b2(_8z)gmmcjgg^u8269
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['kalyaktu.beget.tech', 'www.kalyaktu.beget.tech']
+ALLOWED_HOSTS = ['kalyaktu.beget.tech', 'www.kalyaktu.beget.tech', '127.0.0.1']
 CORS_ORIGIN_ALLOW_ALL = True
 
 
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework.authtoken',
     'corsheaders',
+    'catalog.apps.CatalogConfig',
 ]
 
 MIDDLEWARE = [
@@ -80,14 +81,18 @@ WSGI_APPLICATION = 'animanga.wsgi.application'
 
 DATABASES = {
     'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'kalyaktu_django',
         'USER': 'kalyaktu_django',
         'PASSWORD': 'Semakal123',
-        'HOST': 'localhost',
+        'HOST': 'kalyaktu.beget.tech',
         'Port': '3306',
+
+        # 'ENGINE': 'django.db.backends.mysql',
+        # 'NAME': 'root',
+        # 'USER': 'root',
+        # 'PASSWORD': '123',
+        # 'HOST': 'localhost',
     }
 }
 
