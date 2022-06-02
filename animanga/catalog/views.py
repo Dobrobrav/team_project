@@ -3,8 +3,6 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Genres, AnimeGenres
-
 from .models import *
 
 
@@ -183,7 +181,6 @@ class CurrentContentInfoAPIView(APIView):
         ))
 
 
-
 class RelatedSeasonAPIView(APIView):
     def get(self, request):
         anime_id = request.data['anime_id']
@@ -221,7 +218,6 @@ class ExistingMangaChaptersInfoAPIView(APIView):
         ]
 
         return Response({"list": existing_manga_chapters_info})
-
 
 
 class MangaInfoAPIView(APIView):
@@ -290,4 +286,22 @@ class MangaInfoAPIView(APIView):
         ))
 
 
+class ConcreteChapterPagesAPIView(APIView):
+    def get(self, request):
+        manga_id = request.data['manga_id']
+        chapter_number = request.data['chapter_number']
+        # return Response()
 
+        chapter = Chapters.objects.get(chapter_number=chapter_number)
+        pages = Pages.objects.filter(chapter=chapter.chapter_id)
+        # return Response()
+
+        return Response(
+            [
+                {
+                    'id': page.page_id,
+                    'url': page.chapter_url,
+                }
+                for page in pages
+            ]
+        )
