@@ -3,5 +3,10 @@ from .views import *
 
 
 urlpatterns = [
-    path('get_catalog/', (CatalogAPIView.as_view())),
+    path('catalog_elements/', (CatalogElementsAPIView.as_view())),
+    path('basic_anime_info/', (BasicAnimeInfoAPIView.as_view())),
+    path('current_content_info/', (CurrentContentInfoAPIView.as_view())),
+    path('related_seasons_info/', (RelatedSeasonAPIView.as_view())),
+    path('existing_manga_chapter_info/', (ExistingMangaChaptersInfoAPIView.as_view())),
+    path('manga_info/', (MangaInfoAPIView.as_view())),
 ]

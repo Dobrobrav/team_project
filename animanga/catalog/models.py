@@ -175,7 +175,7 @@ class Pages(models.Model):
     page_id = models.IntegerField(db_column='Page_Id', primary_key=True)  # Field name made lowercase.
     chapter = models.ForeignKey(Chapters, models.DO_NOTHING, db_column='Chapter_Id')  # Field name made lowercase.
     chapter_url = models.CharField(db_column='Chapter_URL', max_length=150)  # Field name made lowercase.
-    chapter_number = models.IntegerField(db_column='Chapter_Number')  # Field name made lowercase.
+    page_number = models.IntegerField(db_column='Page_Number')  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -202,7 +202,9 @@ class Seasons(models.Model):
     anime_type = models.ForeignKey(AnimeType, models.DO_NOTHING, db_column='Anime_Type_Id')  # Field name made lowercase.
     studio = models.ForeignKey('Studio', models.DO_NOTHING, db_column='Studio_Id')  # Field name made lowercase.
     is_main_content = models.CharField(db_column='Is_Main_Content', max_length=45)  # Field name made lowercase.
-    main_parent = models.ForeignKey('self', models.DO_NOTHING, db_column='Main_Parent_Id', blank=True, null=True)  # Field name made lowercase.
+    main_parent_season = models.ForeignKey('self', models.DO_NOTHING, db_column='Main_Parent_Season_Id', blank=True, null=True)  # Field name made lowercase.
+    manga_id = models.IntegerField(db_column='Manga_Id', blank=True, null=True)  # Field name made lowercase.
+    chapter_id = models.IntegerField(db_column='Chapter_Id', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
         managed = False
@@ -217,12 +219,11 @@ class Series(models.Model):
     russian_name = models.CharField(db_column='Russian_Name', max_length=45)  # Field name made lowercase.
     serises_url = models.CharField(db_column='Serises_URL', max_length=45)  # Field name made lowercase.
     opening_start = models.IntegerField(db_column='Opening_Start')  # Field name made lowercase.
-    anime_id = models.IntegerField(db_column='Anime_Id')  # Field name made lowercase.
 
     class Meta:
         managed = False
         db_table = 'Series'
-        unique_together = (('series_id', 'season', 'anime_id'),)
+        unique_together = (('series_id', 'season'),)
 
 
 class Studio(models.Model):
@@ -238,7 +239,9 @@ class Title(models.Model):
     title_id = models.IntegerField(db_column='Title_Id', primary_key=True)  # Field name made lowercase.
     anime = models.ForeignKey(AnimeContent, models.DO_NOTHING, db_column='Anime_Id')  # Field name made lowercase.
     manga = models.ForeignKey(MangaContent, models.DO_NOTHING, db_column='Manga_Id', blank=True, null=True)  # Field name made lowercase.
-    title_name = models.CharField(db_column='Title_Name', max_length=45)  # Field name made lowercase.
+    title_russian_name = models.CharField(db_column='Title_Russian_Name', max_length=45)  # Field name made lowercase.
+    title_english_name = models.CharField(db_column='Title_English_Name', max_length=45)  # Field name made lowercase.
+    poster = models.CharField(db_column='Poster', max_length=45)  # Field name made lowercase.
 
     class Meta:
         managed = False
