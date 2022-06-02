@@ -305,3 +305,12 @@ class ConcreteChapterPagesAPIView(APIView):
                 for page in pages
             ]
         )
+
+
+class ConcreteMangaNameAPIView(APIView):
+    def get(self, request):
+        manga_id = request.data['manga_id']
+
+        return Response({
+            'title': MangaContent.objects.get(pk=manga_id).manga_names.russian_name
+        })
