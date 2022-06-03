@@ -160,6 +160,44 @@ class BasicAnimeInfoAPIView(APIView):
         return Response(total_dict)
 
 
+class ConcreteAnimeEpisode(APIView): # не понятно, где брать номер сезона
+    def get(self, request):
+        anime_id = request.data['anime_id']
+        episode_number = request.data['episode_number']
+
+
+class AvailableContentForAnime(APIView):
+    def get(self, request):
+        anime_id = request.data['anime_id']
+
+        available_seasons = Seasons.objects.filter(anime=anime_id)
+        available_seasons_info = [
+            {
+                'id': season.season_id,
+                'title': season.anime_names.russian_name,
+                'type': season.anime_type.anime_type_name,
+                'status': AnimeInfoByStudio.objects.get(
+                    season_id=season.season_id,
+                    anime_id=anime_id,
+                    studio=season.studio.studio_id,
+                ).anime_status,
+                'count_of_episodes': 'null',
+                'rate': 'null',
+                'count_of_related_content': len(Seasons.objects.filter(main_parent_season=season.season_id)),
+                'img': Title.objects.get(anime=anime_id).poster,
+                'date_of_release': AnimeInfoByStudio.objects.get(
+                    season_id=season.season_id,
+                    anime_id=anime_id,
+                    studio=season.studio.studio_id,
+                ).release_date
+            }
+            for season in available_seasons
+        ]
+
+        return Response({'list': available_seasons_info})
+
+
+
 class CurrentContentInfoAPIView(APIView):
     def get(self, request):
         anime_id = request.data['anime_id']
@@ -292,7 +330,8 @@ class ConcreteChapterPagesAPIView(APIView):
         chapter_number = request.data['chapter_number']
         # return Response()
 
-        chapter = Chapters.objects.get(chapter_number=chapter_number)
+        # manga_content = MangaContent.objects.get(pk=manga_id)
+        chapter = Chapters.objects.get(manga=manga_id, chapter_number=chapter_number)
         pages = Pages.objects.filter(chapter=chapter.chapter_id)
         # return Response()
 
