@@ -10,8 +10,10 @@ urlpatterns = [
 
     path('current_content_info/', (CurrentContentInfoAPIView.as_view())),
     path('related_seasons_info/', (RelatedSeasonAPIView.as_view())),
-    path('existing_manga_chapter_info/', (ExistingMangaChaptersInfoAPIView.as_view())),
+    path('existing_manga_chapters_info/', (ExistingMangaChaptersInfoAPIView.as_view())),
     path('manga_info/', (MangaInfoAPIView.as_view())),
     path('concrete_chapter_pages/', (ConcreteChapterPagesAPIView.as_view())),
     path('concrete_manga_name/', (ConcreteMangaNameAPIView.as_view())),
+    # Profile
+    # path('user_info/', (UserInfoAPIView.as_view())),
 ]

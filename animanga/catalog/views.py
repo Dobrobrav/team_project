@@ -1,45 +1,31 @@
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import *
 
 
 class CatalogElementsAPIView(APIView):
-    def get(self, request):
-        # return Response({1: 10, 2: 20})
-
-        limit = int(request.data['limit'])
-        page = int(request.data['page'])
-        # return Response(dict(limit=limit, page=page))
-
+    def post(self, request):
+        limit = int(request.data['limit'])  # 1
+        page = int(request.data['page'])  # 2
         id_start = limit * (page - 1) + 1
-        # id_start = limit * page
-        # return Response(dict(id_start=id_start))
-
         id_end = id_start + limit
-        # return Response(dict(id_start=id_start, id_end=id_end))
+        count_of_els = len(Title.objects.all())
+
+        if count_of_els < id_end - 1:
+            id_end = count_of_els + 1
 
         id_range = range(id_start, id_end)
 
         total_list = []
         for id in id_range:
-
             title = Title.objects.get(pk=id)
-            # return Response({1: title.pk})
             anime_content = title.anime
-            # return  Response({1: anime_content.pk})
+            img = title.poster
+            age_distinction = anime_content.age_limit.age_limit
             anime_genres_list = AnimeGenres.objects.filter(anime=anime_content.pk)
-            # return Response({1: len(anime_genres_list)})
-            # if anime_genres_list:
-            #     return Response({1: 10})
-            # return Response({2: 20})
             genres_list = [anime_genres_inst.genres for anime_genres_inst in anime_genres_list]
-            # return Response({1: len(genres_list)})
-
             seasons = Seasons.objects.filter(anime=anime_content.pk)
-            # return Response({1: len(seasons)})
+
             genres = [
                 {
                     'id': genre.genres_id,
@@ -47,35 +33,35 @@ class CatalogElementsAPIView(APIView):
                 }
                 for genre in genres_list
             ]
-            # return Response({1: genres})
 
             title_out = {
                 'ru': title.title_russian_name,
                 'eng': 'null',
             }
-            # return Response({1: title_out})
 
-            manga_id = title.manga.pk
-            # return Response({1: manga_id})
+            manga_id = 'null'
+            try:
+                manga_id = title.manga.pk
+            except:
+                pass
 
             content = [
                 {
                     'id': season.season_id,
-                    'title': season.anime_names.russian_name
+                    'title': season.anime_names.russian_name,
                 }
-                for season in seasons
+                for season in seasons if season.is_main_content == "true"
             ]
-            # return Response({1: 10})
-
-
 
             current_dict = {
                 'id': id,
                 'genres': genres,
                 'title': title_out,
-                # 'rate': anime_rating.score,
+                'age_distinction': age_distinction,
+                'img': img,
                 'manga_id': manga_id,
-                'content': content
+                'content': content,
+                'count_of_els': count_of_els,
             }
             total_list.append(current_dict)
 
@@ -83,20 +69,19 @@ class CatalogElementsAPIView(APIView):
 
 
 class BasicAnimeInfoAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
 
-        anime_id = int(request.data['anime_id'])
         season_id = int(request.data['season_id'])
-        # return Response({1: 10})
+        anime_content = Seasons.objects.get(season_id=season_id)
+        anime_id = anime_content.pk
 
         title = {
             'rus': Title.objects.get(anime=anime_id).title_russian_name,
             'eng': 'null',
         }
-        # return Response({1: 10})
 
+        img = Title.objects.get(anime=anime_id).poster
 
-        img = 'null'
         anime_genres_list = AnimeGenres.objects.filter(anime=anime_id)
 
         genres_list = [anime_genres_inst.genres for anime_genres_inst in anime_genres_list]
@@ -104,22 +89,18 @@ class BasicAnimeInfoAPIView(APIView):
             {'id': genre.genres_id, 'name': genre.genres_name}
             for genre in genres_list
         ]
-        # return Response({1: genres})
 
         age_distinction = AnimeContent.objects.get(pk=anime_id).age_limit.age_limit
-        # return Response({1: age_distinction})
 
-
-        season = Seasons.objects.get(anime=anime_id)
+        season = Seasons.objects.get(season_id=season_id)
         studio = season.studio
-        # return Response({1: studio.studio_name})
+        chapter_id = season.chapter_id
 
         description = season.anime_description
 
+        anime_info = AnimeInfoByStudio.objects.get(season_id=season_id)
+        opening_length = anime_info.opening_length
 
-        anime_info = AnimeInfoByStudio.objects.get(studio=studio.pk, anime_id=anime_id, season_id=season_id)
-
-        # return Response({'quantity': anime_info})
 
         studio = [
             {
@@ -127,18 +108,18 @@ class BasicAnimeInfoAPIView(APIView):
                 'name': studio.studio_name,
             }
         ]
-        # return Response({1: studio})
 
         episode_duration = 'null'
         status = anime_info.anime_status
+        manga_id = 'null'
+        try:
+            manga_id = Title.objects.get(anime=anime_id).manga.manga_id
+        except:
+            pass
 
-        manga_id = Title.objects.get(anime=anime_id).manga.manga_names.russian_name
-        # return Response(manga_id)
-        count_of_episodes = 'null'
-
+        series = season.series_set
+        count_of_episodes = series.count()
         release_date = anime_info.release_date
-        # anime_rating = AnimeRating.objects.get(Anime)
-        # anime_rating =
         rate = 'null'
 
         total_dict = dict(
@@ -152,22 +133,32 @@ class BasicAnimeInfoAPIView(APIView):
             episode_duration=episode_duration,
             status=status,
             manga_id=manga_id,
+            chapter_id=chapter_id,
             count_of_episodes=count_of_episodes,
             release_date=release_date,
             rate=rate,
+            opening_length=opening_length,
         )
 
         return Response(total_dict)
 
 
-class ConcreteAnimeEpisode(APIView): # не понятно, где брать номер сезона
-    def get(self, request):
-        anime_id = request.data['anime_id']
+class ConcreteAnimeEpisode(APIView):
+    def post(self, request):
         episode_number = request.data['episode_number']
+        season_id = request.data['season_id']
+        episode = Series.objects.get(series_id=episode_number, season=season_id)
+        opening_start = episode.opening_start
+
+        return Response({
+            'title': episode.russian_name,
+            'url': episode.serises_url,
+            'opening_start': opening_start,
+        })
 
 
 class AvailableContentForAnime(APIView):
-    def get(self, request):
+    def post(self, request):
         anime_id = request.data['anime_id']
 
         available_seasons = Seasons.objects.filter(anime=anime_id)
@@ -191,36 +182,36 @@ class AvailableContentForAnime(APIView):
                     studio=season.studio.studio_id,
                 ).release_date
             }
-            for season in available_seasons
+            for season in available_seasons if season.is_main_content == 'true'
         ]
 
         return Response({'list': available_seasons_info})
 
 
-
 class CurrentContentInfoAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
         anime_id = request.data['anime_id']
         season_id = request.data['season_id']
-        # return Response()
 
         id = season_id
         season = Seasons.objects.get(anime=anime_id, season_id=season_id)
-        # return Response()
 
+        title = Seasons.objects.get(season_id=season_id).anime_names.russian_name
 
-        title = Title.objects.get(anime=anime_id).title_russian_name
-        # return Response()
+        parent_id = 'null'
+
+        if season.is_main_content == 'false':
+            parent_id = season.main_parent_season.season_id
 
         return Response(dict(
             id=id,
             title=title,
-            parent_id='null', #в дальнейшем реализовать проверку на наличие
+            parent_id=parent_id,  # в дальнейшем реализовать проверку на наличие
         ))
 
 
 class RelatedSeasonAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
         anime_id = request.data['anime_id']
         season_id = request.data['season_id']
 
@@ -239,11 +230,10 @@ class RelatedSeasonAPIView(APIView):
 
 
 class ExistingMangaChaptersInfoAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
         manga_id = request.data['manga_id']
 
         existing_manga_chapters = Chapters.objects.filter(manga=manga_id)
-        # return Response({1: len(existing_manga_chapters)})
 
         existing_manga_chapters_info = [
             {
@@ -259,7 +249,7 @@ class ExistingMangaChaptersInfoAPIView(APIView):
 
 
 class MangaInfoAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
         manga_id = request.data['manga_id']
 
         manga_content = MangaContent.objects.get(manga_id=manga_id)
@@ -269,10 +259,8 @@ class MangaInfoAPIView(APIView):
             'rus': manga_names.russian_name,
             'eng': manga_names.english_name,
         }
-        # return Response()
         title = Title.objects.get(manga=manga_id)
         img = title.poster
-        # return Response({1: img})
 
         manga_genres_list = MangaGenres.objects.filter(manga=manga_id)
         genres = [
@@ -283,30 +271,22 @@ class MangaInfoAPIView(APIView):
             for genre in (manga_genre.genres
                           for manga_genre in manga_genres_list)
         ]
-        # return Response({"genres": genres})
 
         description = manga_content.manga_description
-        # return Response({1: description})
 
         age_distinction = manga_content.age_limit.age_limit
-        # return Response({1: age_distinction})
 
         author = manga_content.author
-        # return Response({1: author.last_name})
         author_out = {
             'id': author.pk,
             'name': f"{author.first_name} {author.last_name}",
         }
-        # return Response({1: author_out})
 
         status = manga_content.manga_status_tittle
-        # return Response({1: status})
 
         anime_id = title.anime.pk
-        # return Response({1: anime_id})
 
         release_date = manga_content.release_date_id
-        # return Response({1: release_date})
 
         rate = 'null'
 
@@ -325,15 +305,12 @@ class MangaInfoAPIView(APIView):
 
 
 class ConcreteChapterPagesAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
         manga_id = request.data['manga_id']
         chapter_number = request.data['chapter_number']
-        # return Response()
 
-        # manga_content = MangaContent.objects.get(pk=manga_id)
         chapter = Chapters.objects.get(manga=manga_id, chapter_number=chapter_number)
         pages = Pages.objects.filter(chapter=chapter.chapter_id)
-        # return Response()
 
         return Response(
             [
@@ -347,9 +324,33 @@ class ConcreteChapterPagesAPIView(APIView):
 
 
 class ConcreteMangaNameAPIView(APIView):
-    def get(self, request):
+    def post(self, request):
         manga_id = request.data['manga_id']
 
         return Response({
             'title': MangaContent.objects.get(pk=manga_id).manga_names.russian_name
         })
+
+
+class UserInfoAPIView(APIView):  # Таблица Profiles пустая - надо заполнить!(хз, работает ли)
+    def post(self, request):
+        user_id = request.data['user_id']
+
+        profile = Profiles.objects.get(pk=user_id)
+        return Response()
+
+        img = profile.avatar
+
+        nickname = profile.nickname
+        count_of_titles = len(AnimeRating.objects.filter(user=user_id))
+        favourite_genre = 'Может не надо?(('
+        status = profile.status
+
+        return Response(dict(
+            id=user_id,
+            img=img,
+            nickname=nickname,
+            count_of_titles=count_of_titles,
+            favourite_genre=favourite_genre,
+            status=status,
+        ))
